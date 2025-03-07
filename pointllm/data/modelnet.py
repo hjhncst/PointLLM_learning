@@ -96,24 +96,37 @@ class ModelNet(Dataset):
     
     def pc_norm(self, pc):
         """ pc: NxC, return NxC """
+        # 提取点云的前三列，即坐标信息 (x, y, z)
         xyz = pc[:, :3]
+        # 提取点云的其他特征，如果有的话
         other_feature = pc[:, 3:]
 
+        # 计算点云坐标的质心（即所有点的平均值）
         centroid = np.mean(xyz, axis=0)
+        # 将每个点的坐标减去质心，使点云中心化
         xyz = xyz - centroid
+        # 计算每个点到原点的欧氏距离，并找到最大值
         m = np.max(np.sqrt(np.sum(xyz ** 2, axis=1)))
+        # 将点云坐标除以最大距离，进行归一化
         xyz = xyz / m
 
+        # 将归一化后的坐标与其他特征重新拼接
         pc = np.concatenate((xyz, other_feature), axis=1)
+        # 返回归一化后的点云
         return pc
 
     def __getitem__(self, index):
+        # 获取指定索引的点和标签
         points, label = self._get_item(index)
+        # 生成一个从0到点数-1的索引数组
         pt_idxs = np.arange(0, points.shape[0])  # 2048
+        # 如果是训练集，则随机打乱索引数组
         if self.split == 'train':
             np.random.shuffle(pt_idxs)
+        # 根据打乱后的索引获取当前点云数据
         current_points = points[pt_idxs].copy()
 
+        # 如果需要归一化点云数据
         if self.normalize_pc:
             # * modelnet point cloud is already normalized
             current_points = self.pc_norm(current_points)
