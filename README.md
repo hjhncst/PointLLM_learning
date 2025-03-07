@@ -24,16 +24,27 @@
 
 ## modelnet.py
 
-![alt text](E:\论文代码学习\PointLLM\assets\image1.png)
+<p align="center">
+  <img src="assets/image1.png" align="center" width="100%">
+</p>
 
 根据索引加载单个数据样本，并对其做预处理。
 
-![alt text](E:\论文代码学习\PointLLM\assets\image2.png)
+<p align="center">
+  <img src="assets/image2.png" align="center" width="100%">
+</p>
 
-![alt text](E:\论文代码学习\PointLLM\assets\image3.png)
+<p align="center">
+  <img src="assets/image3.png" align="center" width="100%">
+</p>
 
 对输入点云进行归一化，确保其中心化并缩放到单位范围内。
 
-![alt text](E:\论文代码学习\PointLLM\assets\image4.png)
+<p align="center">
+  <img src="assets/image4.png" align="center" width="100%">
+</p>
 
 从数据集中取出一个样本，并将其转换为 PyTorch tensor，同时构造包含额外信息的字典返回。
+
+## object_point_dataset.py
+
