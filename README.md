@@ -48,3 +48,22 @@
 
 ## object_point_dataset.py
 
+整个代码整体功能是构建一个点云和文本数据集，并为模型训练提供数据支持。
+
+<p align="center">
+  <img src="assets/image5.png" align="center" width="100%">
+</p>
+
+创建数据集和数据整理器（collator），用于训练和验证。
+
+<p align="center">
+  <img src="assets/image6.png" align="center" width="100%">
+</p>
+
+根据 object_id 加载对应的点云数据。
+
+<p align="center">
+  <img src="assets/image7.png" align="center" width="100%">
+</p>
+
+加载并返回 object_id 对应的点云数据。

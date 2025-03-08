@@ -14,23 +14,27 @@ def make_object_point_data_module(tokenizer: transformers.PreTrainedTokenizer, d
     """Make dataset and collator for Joint3Ddataset with text and point cloud data."""
     """Initialize datasets."""
 
+    # 初始化数据整理器，用于处理点和文本数据
     data_collator = DataCollatorForPointTextDataset(tokenizer=tokenizer)
+    # 检查是否需要分割训练和验证数据集
     if data_args.split_train_val:
         print("Loading training datasets.")
+        # 加载训练数据集
         train_dataset = ObjectPointCloudDataset(
-            split='train',
-            data_path=data_args.data_path,
-            anno_path=data_args.anno_path,
-            pointnum=data_args.pointnum,
-            conversation_types=data_args.conversation_types,
-            tokenizer=tokenizer,
-            use_color=data_args.use_color,
-            data_args=data_args
+            split='train',  # 指定数据集为训练集
+            data_path=data_args.data_path,  # 数据路径
+            anno_path=data_args.anno_path,  # 注释路径
+            pointnum=data_args.pointnum,  # 点云数量
+            conversation_types=data_args.conversation_types,  # 对话类型
+            tokenizer=tokenizer,  # 分词器
+            use_color=data_args.use_color,  # 是否使用颜色信息
+            data_args=data_args  # 其他数据参数
         )
         print("Done!")
+        # 检查是否处于调试模式
         if data_args.data_debug_num > 0:
             print('Debug mode, using training set as val set.')
-            val_dataset = train_dataset
+            val_dataset = train_dataset  # 在调试模式下，使用训练集作为验证集
         else:
             # * make a val dataset
             print("Loading validation datasets.")
@@ -137,39 +141,56 @@ class ObjectPointCloudDataset(Dataset):
                 self.list_data_dict = self.list_data_dict[int(self.data_args.split_ratio * len(self.list_data_dict)):]
                 print(f"Val set size: {len(self.list_data_dict)}")
 
-    def _load_point_cloud(self, object_id, type='objaverse'):
-        if type == 'objaverse':
-            return self._load_objaverse_point_cloud(object_id) 
+    def _load_point_cloud(self, object_id, type='objaverse'):  # 定义一个私有方法，用于加载点云数据
+        if type == 'objaverse':  # 检查传入的类型是否为'objaverse'
+            return self._load_objaverse_point_cloud(object_id)   # 如果是，则调用_load_objaverse_point_cloud方法加载点云数据
 
     def _load_objaverse_point_cloud(self, object_id):
+        # 构建文件名，格式为 "object_id_pointnum.npy"
         filename = f"{object_id}_{self.pointnum}.npy"
+        # 使用numpy的load函数加载指定路径下的点云数据文件
         point_cloud = np.load(os.path.join(self.data_path, filename))
 
+        # 如果不使用颜色信息，只保留点云的前三列（即x, y, z坐标）
         if not self.use_color:
             point_cloud = point_cloud[:, :3]
 
+        # 返回加载的点云数据
         return point_cloud
 
     def pc_norm(self, pc):
         """ pc: NxC, return NxC """
+        # 提取点云的前三列，即坐标信息 (x, y, z)
         xyz = pc[:, :3]
+        # 提取点云的其他特征，如果有的话
         other_feature = pc[:, 3:]
 
+        # 计算点云的质心，即所有点的坐标的平均值
         centroid = np.mean(xyz, axis=0)
+        # 将每个点的坐标减去质心，使点云中心化
         xyz = xyz - centroid
+        # 计算每个点到原点的欧氏距离，并取最大值
         m = np.max(np.sqrt(np.sum(xyz ** 2, axis=1)))
+        # 将点云的坐标除以最大距离，进行归一化
         xyz = xyz / m
 
+        # 将归一化后的坐标与其他特征重新拼接
         pc = np.concatenate((xyz, other_feature), axis=1)
+        # 返回归一化后的点云
         return pc
     
     def __getitem__(self, index):
+        # 获取指定索引的数据
         sources = self.list_data_dict[index]
+        # 如果索引是整数，将数据包装成列表
         if isinstance(index, int):
             sources = [sources]
+        # 确保数据是列表形式
         assert len(sources) == 1, "sources should be a list"
+        # 检查数据中是否包含点云指示符
         if self.point_indicator in sources[0]['conversations'][0]['value']:
 
+            # 获取对象ID
             object_id = self.list_data_dict[index]['object_id']
 
             # Point cloud representation
