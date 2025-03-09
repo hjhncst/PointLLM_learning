@@ -67,3 +67,31 @@
 </p>
 
 加载并返回 object_id 对应的点云数据。
+
+## utils.py
+
+定义一系列工具函数
+
+<p align="center">
+  <img src="assets/image8.png" align="center" width="100%">
+</p>
+
+LRU缓存类，定义一些列缓存操作。
+
+<p align="center">
+  <img src="assets/image9.png" align="center" width="100%">
+</p>
+
+定义一个数据集类，用于加载和处理点云数据。
+
+<p align="center">
+  <img src="assets/image10.png" align="center" width="100%">
+</p>
+
+定义一个采样方法，从原始点云中采样，保持了数据的代表性，用于三维点云数据的降维处理。
+
+<p align="center">
+  <img src="assets/image11.png" align="center" width="100%">
+</p>
+
+将点云数据标准化，使其适应单位球体。具体来说，它首先计算点云的质心，然后从所有点中减去这个质心，最后将所有点按比例缩放到单位球体内部。
