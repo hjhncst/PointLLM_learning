@@ -95,3 +95,37 @@ LRU缓存类，定义一些列缓存操作。
 </p>
 
 将点云数据标准化，使其适应单位球体。具体来说，它首先计算点云的质心，然后从所有点中减去这个质心，最后将所有点按比例缩放到单位球体内部。
+
+# eval文件夹
+
+## chat_gradio.py
+
+<p align="center">
+  <img src="assets/image12.png" align="center" width="100%">
+</p>
+
+根据输入方法的参数来更新可见性设置。具体来说，它根据传入的 input_method 参数，返回一个包含两个元素的列表，每个元素都是一个 gr.update 对象，用于控制某个组件的可见性。
+
+<p align="center">
+  <img src="assets/image13.png" align="center" width="100%">
+</p>
+
+主函数，用于启动对话系统。它接收多个参数，包括命令行参数、模型、分词器、点云配置、关键词、是否使用点云开始和结束标记以及对话模板。
+
+<p align="center">
+  <img src="assets/image14.png" align="center" width="100%">
+</p>
+
+用于生成回答。它接收对话历史、回答时间、点云数据和对话模板作为输入。如果点云数据为空，它会提示用户输入点云。否则，它会使用模型生成回答，并将其添加到对话历史中。
+
+<p align="center">
+  <img src="assets/image14.png" align="center" width="100%">
+</p>
+
+用于确认点云数据。它处理用户输入，可以是文件上传或对象ID输入。根据输入类型，它会加载点云数据并进行预处理。如果处理成功，它会返回一个图形对象、点云数据、更新后的对话模板和回答时间。
+
+<p align="center">
+  <img src="assets/image15.png" align="center" width="100%">
+</p>
+
+用于启动对话系统。它接收多个参数，包括命令行参数、模型、分词器、点云配置、关键词、是否使用点云开始和结束标记以及对话模板。

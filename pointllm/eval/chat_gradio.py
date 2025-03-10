@@ -23,14 +23,18 @@ import logging
 
 
 def change_input_method(input_method):
+    # 根据输入方法参数，决定返回的可见性更新列表
     if input_method == 'File':
+        # 如果输入方法是'File'，则第一个元素可见，第二个元素不可见
         result = [gr.update(visible=True),
         gr.update(visible=False)]
     elif input_method == 'Object ID':
+        # 如果输入方法是'Object ID'，则第一个元素不可见，第二个元素可见
         result = [gr.update(visible=False),
         gr.update(visible=True)]
     return result
 
+# 初始化模型
 def init_model(args):
     # Model
     disable_torch_init()
@@ -44,6 +48,7 @@ def init_model(args):
     model = PointLLMLlamaForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=False, use_cache=True).cuda()
     model.initialize_tokenizer_point_backbone_config_wo_embedding(tokenizer)
 
+    # 设置模型为评估模式
     model.eval()
 
     mm_use_point_start_end = getattr(model.config, "mm_use_point_start_end", False)
@@ -57,7 +62,9 @@ def init_model(args):
     
     return model, tokenizer, point_backbone_config, keywords, mm_use_point_start_end, conv
 
+# 开始对话
 def start_conversation(args, model, tokenizer, point_backbone_config, keywords, mm_use_point_start_end, conv):
+    # 从配置中获取点云令牌长度、默认点云补丁令牌、默认点云开始令牌和默认点云结束令牌
     point_token_len = point_backbone_config['point_token_len']
     default_point_patch_token = point_backbone_config['default_point_patch_token']
     default_point_start_token = point_backbone_config['default_point_start_token']
@@ -73,6 +80,7 @@ def start_conversation(args, model, tokenizer, point_backbone_config, keywords, 
         # Reset the conversation template
         conv.reset()
 
+        # 用于确认点云数据
         def confirm_point_cloud(input_choice, object_id_input, point_cloud_input, chatbot, answer_time, conv):
             objects = None
             data = None
@@ -179,7 +187,8 @@ def start_conversation(args, model, tokenizer, point_backbone_config, keywords, 
             chatbot = chatbot + [[None, outputs]]
             
             return fig, list(objects.values())[0] if objects is not None else None, chatbot, answer_time, point_clouds
-
+        
+        # 生成回答
         def answer_generate(history, answer_time, point_clouds, conv):
             if point_clouds is None:
                 outputs = "<span style='color: red;'>[System] Please input point cloud! </span>"
