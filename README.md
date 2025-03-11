@@ -129,3 +129,47 @@ LRU缓存类，定义一些列缓存操作。
 </p>
 
 用于启动对话系统。它接收多个参数，包括命令行参数、模型、分词器、点云配置、关键词、是否使用点云开始和结束标记以及对话模板。
+
+## eval_modelnet_cls.py
+
+<p align="center">
+  <img src="assets/image16.png" align="center" width="100%">
+</p>
+
+初始化机器学习模型。
+
+<p align="center">
+  <img src="assets/image17.png" align="center" width="100%">
+</p>
+
+用于加载ModelNet数据集的指定部分。
+
+<p align="center">
+  <img src="assets/image18.png" align="center" width="100%">
+</p>
+
+用于创建并返回一个数据加载器（DataLoader）。数据加载器是深度学习中用于批量加载数据、打乱数据以及多线程数据预处理的工具。
+
+<p align="center">
+  <img src="assets/image19.png" align="center" width="100%">
+</p>
+
+用于基于给定的输入和模型生成相应的输出序列。
+
+<p align="center">
+  <img src="assets/image20.png" align="center" width="100%">
+</p>
+
+用于生成模型响应并将其保存到指定的输出目录中。
+
+## eval_objaverse.py
+
+使用的是 Objaverse 数据集，这是一个大规模的3D对象数据集，包含了多样化的3D对象。可以用于对象描述生成（captioning）和分类任务，具体任务类型由参数 task_type 决定。
+
+<p align="center">
+  <img src="assets/image21.png" align="center" width="100%">
+</p>
+
+## evaluator.py
+
+

@@ -39,6 +39,7 @@ def init_model(args):
     return model, tokenizer, conv
 
 def load_dataset(data_path, anno_path, pointnum, conversation_types, use_color):
+    # 打印信息，表示开始加载验证数据集
     print("Loading validation datasets.")
     dataset = ObjectPointCloudDataset(
         data_path=data_path,
