@@ -172,4 +172,23 @@ LRU缓存类，定义一些列缓存操作。
 
 ## evaluator.py
 
+用于使用OpenAI的GPT模型对3D物体进行分类和描述评估。代码中定义了三个主要的评估器类：OpenAIOpenFreeFormClsEvaluator、OpenAICloseSetClsEvaluator和OpenAIObjectCaptioningEvaluator，分别用于开放形式的分类、封闭集的分类和物体描述的评估。此外，还有一个主函数start_evaluation用于启动评估过程，以及一个命令行接口用于接收用户输入的参数。
+
+<p align="center">
+  <img src="assets/image22.png" align="center" width="100%">
+</p>
+
+## PointLLM_chat.py
+
+于点云数据和语言模型的对话系统。它使用了一个预训练的语言模型（PointLLM），并结合点云数据进行交互式对话。
+
+<p align="center">
+  <img src="assets/image23.png" align="center" width="100%">
+</p>
+
+通过object_id从指定路径加载点云数据，并将其转换为PyTorch张量。
+
+## traditional_evaluator.py
+
+## utils.py
 

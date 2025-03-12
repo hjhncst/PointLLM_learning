@@ -12,10 +12,16 @@ from pointllm.data import load_objaverse_point_cloud
 import os
 
 def load_point_cloud(args):
+    # 从传入的参数对象中获取object_id
     object_id = args.object_id
+    # 打印信息，显示当前正在使用哪个object_id来加载点云数据
     print(f"[INFO] Loading point clouds using object_id: {object_id}")
+    # 调用load_objaverse_point_cloud函数，传入数据路径、object_id、点云数量和是否使用颜色信息
+    # pointnum=8192表示加载8192个点，use_color=True表示加载带颜色的点云数据
     point_cloud = load_objaverse_point_cloud(args.data_path, object_id, pointnum=8192, use_color=True)
     
+    # 将加载的点云数据从numpy数组转换为PyTorch张量，并添加一个维度，然后转换为float32类型
+    # unsqueeze_(0)在第一个维度上添加一个维度，to(torch.float32)将数据类型转换为float32
     return object_id, torch.from_numpy(point_cloud).unsqueeze_(0).to(torch.float32)
 
 def init_model(args):
@@ -49,9 +55,13 @@ def init_model(args):
     return model, tokenizer, point_backbone_config, keywords, mm_use_point_start_end, conv
 
 def start_conversation(args, model, tokenizer, point_backbone_config, keywords, mm_use_point_start_end, conv):
+    # 从配置中获取点云令牌长度
     point_token_len = point_backbone_config['point_token_len']
+    # 获取默认的点云补丁令牌
     default_point_patch_token = point_backbone_config['default_point_patch_token']
+    # 获取默认的点云开始令牌
     default_point_start_token = point_backbone_config['default_point_start_token']
+    # 获取默认的点云结束令牌
     default_point_end_token = point_backbone_config['default_point_end_token']
     # The while loop will keep running until the user decides to quit
     print("[INFO] Starting conversation... Enter 'q' to exit the program and enter 'exit' to exit the current conversation.")
