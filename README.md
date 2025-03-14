@@ -258,3 +258,41 @@ LRU缓存类，定义一些列缓存操作。
 参数: model 是一个 nn.Module 对象，表示要遍历的模型；prefix 是模块名称的前缀。
 返回值: 一个生成器，生成 (名称, 模块) 的元组。
 
+### dvae.py
+
+![alt text](../PointLLM/assets/image28.png)
+
+构建一个神经网络模型。这个模型主要用于处理一维和二维的卷积操作，并通过一系列的层来转换输入特征。
+
+![alt text](../PointLLM/assets/image29.png)
+
+用于获取图特征（Graph Feature）的函数，通常用于点云处理或图形学中的局部特征提取。
+
+![alt text](../PointLLM/assets/image30.png)
+
+用于在一个点云数据中，为每个查询点（new_xyz）寻找其对应的 nsample 个最近邻点。具体来说，它先计算查询点与所有点（xyz）之间的平方距离，然后利用 torch.topk 在最后一个维度上选取距离最小的 nsample 个点的索引，返回这些索引以便后续进行局部特征提取或其他操作。
+
+![alt text](../PointLLM/assets/image31.png)
+
+计算两个点云之间的欧氏距离的平方。
+
+![alt text](../PointLLM/assets/image32.png)
+
+将输入的点云数据分组，并对每组内的点进行归一化处理。
+
+![alt text](../PointLLM/assets/image33.png)
+
+对点云的局部组（point_groups）进行编码，生成全局特征。输入的点组尺寸为 [B, G, N, 3]，其中 B 是批次大小，G 表示局部组的数量，N 为每个组中的点数，3 表示点的维度（x, y, z）。
+
+![alt text](../PointLLM/assets/image34.png)
+
+此 Decoder 类接收全局特征，经过多层 MLP 生成粗略点云（coarse），再借助折叠操作（folding operation）生成细化点云（fine）。
+
+![alt text](../PointLLM/assets/image35.png)
+
+基于离散 VAE 的点云生成模型。
+将输入点云分组，再对每个局部组提取全局特征（通过 Encoder）。
+利用第一个 DGCNN 将 Encoder 的输出映射到离散 tokens 的 logits，然后通过 Gumbel-Softmax 得到近似 one-hot 分布，再用 codebook 将离散 tokens 映射到连续特征表示。
+利用第二个 DGCNN 对离散特征进一步处理，供 Decoder 使用。
+通过 Decoder 利用处理后的全局特征生成粗略（coarse）和细化（fine）的点云。
+在 forward 函数中，输出整体点云（加回中心点信息）以及中间结果（例如 tokens logits），供后续计算重构损失和 KL 散度使用。

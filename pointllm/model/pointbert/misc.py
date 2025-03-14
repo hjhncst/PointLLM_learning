@@ -27,16 +27,18 @@ def index_points(points, idx):
     Return:
         new_points:, indexed points data, [B, S, C]
     """
-    device = points.device
-    B = points.shape[0]
-    view_shape = list(idx.shape)
-    view_shape[1:] = [1] * (len(view_shape) - 1)
-    repeat_shape = list(idx.shape)
-    repeat_shape[0] = 1
-    batch_indices = torch.arange(B, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)
-    new_points = points[batch_indices, idx, :]
-    return new_points
+    device = points.device  # 获取输入点云数据所在的设备
+    B = points.shape[0]  # 获取批次大小
+    view_shape = list(idx.shape)  # 获取索引数据的形状
+    view_shape[1:] = [1] * (len(view_shape) - 1)  # 构造 view_shape
+    repeat_shape = list(idx.shape)  # 获取索引数据的形状
+    repeat_shape[0] = 1  # 构造 repeat_shape
+    batch_indices = torch.arange(B, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)  # 生成批次索引
+    new_points = points[batch_indices, idx, :]  # 根据索引采样点
+    return new_points  # 返回采样后的点云数据
 
+
+# 对点云数据进行远点采样
 def fps(xyz, npoint):
     """
     Input:
@@ -62,6 +64,7 @@ def fps(xyz, npoint):
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
+# 学习率调度器
 def build_lambda_sche(opti, config):
     if config.get('decay_step') is not None:
         lr_lbmd = lambda e: max(config.lr_decay ** (e / config.decay_step), config.lowest_decay)
@@ -70,6 +73,7 @@ def build_lambda_sche(opti, config):
         raise NotImplementedError()
     return scheduler
 
+# 学习率调度器
 def build_lambda_bnsche(model, config):
     if config.get('decay_step') is not None:
         bnm_lmbd = lambda e: max(config.bn_momentum * config.bn_decay ** (e / config.decay_step), config.lowest_decay)
@@ -78,6 +82,7 @@ def build_lambda_bnsche(model, config):
         raise NotImplementedError()
     return bnm_scheduler
     
+# 设置随机种子
 def set_random_seed(seed, deterministic=False):
     """Set random seed.
     Args:
@@ -104,7 +109,7 @@ def set_random_seed(seed, deterministic=False):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-
+# 检查一个序列是否是由某种特定类型的元素组成的
 def is_seq_of(seq, expected_type, seq_type=None):
     """Check whether it is a sequence of some type.
     Args:
@@ -127,6 +132,7 @@ def is_seq_of(seq, expected_type, seq_type=None):
     return True
 
 
+# 从一个序列中随机选择一个元素
 def set_bn_momentum_default(bn_momentum):
     def fn(m):
         if isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
@@ -171,45 +177,61 @@ def seprate_point_cloud(xyz, num_points, crop, fixed_points = None, padding_zero
     '''
      seprate point cloud: usage : using to generate the incomplete point cloud with a setted number.
     '''
+    # 获取输入点云的维度信息，其中n为点数，c为每个点的坐标维度（应为3）
     _,n,c = xyz.shape
 
+    # 确保输入点云的点数与指定的点数一致
     assert n == num_points
+    # 确保每个点的坐标维度为3
     assert c == 3
+    # 如果裁剪点数等于总点数，直接返回原点云和空点云
     if crop == num_points:
         return xyz, None
         
+    # 初始化输入点云和裁剪点云的列表
     INPUT = []
     CROP = []
+    # 遍历每个点云
     for points in xyz:
+        # 如果裁剪点数为列表，则随机选择一个裁剪点数
         if isinstance(crop,list):
             num_crop = random.randint(crop[0],crop[1])
         else:
             num_crop = crop
 
+        # 将点云扩展为二维张量
         points = points.unsqueeze(0)
 
+        # 如果未指定固定中心点，则随机生成一个中心点
         if fixed_points is None:       
             center = F.normalize(torch.randn(1,1,3),p=2,dim=-1).cuda()
         else:
+            # 如果固定中心点是列表，则随机选择一个中心点
             if isinstance(fixed_points,list):
                 fixed_point = random.sample(fixed_points,1)[0]
             else:
                 fixed_point = fixed_points
             center = fixed_point.reshape(1,1,3).cuda()
 
+        # 计算中心点到每个点的距离矩阵
         distance_matrix = torch.norm(center.unsqueeze(2) - points.unsqueeze(1), p =2 ,dim = -1)  # 1 1 2048
 
+        # 根据距离矩阵排序，获取距离最近的点索引
         idx = torch.argsort(distance_matrix,dim=-1, descending=False)[0,0] # 2048
 
+        # 如果需要填充零，则将最近的num_crop个点置零
         if padding_zeros:
             input_data = points.clone()
             input_data[0, idx[:num_crop]] =  input_data[0,idx[:num_crop]] * 0
 
         else:
+            # 否则，保留距离中心点最远的点
             input_data = points.clone()[0, idx[num_crop:]].unsqueeze(0) # 1 N 3
 
+        # 获取距离中心点最近的num_crop个点
         crop_data =  points.clone()[0, idx[:num_crop]].unsqueeze(0)
 
+        # 如果裁剪点数为列表，则对输入点和裁剪点进行下采样
         if isinstance(crop,list):
             INPUT.append(fps(input_data,2048))
             CROP.append(fps(crop_data,2048))
@@ -217,16 +239,22 @@ def seprate_point_cloud(xyz, num_points, crop, fixed_points = None, padding_zero
             INPUT.append(input_data)
             CROP.append(crop_data)
 
+    # 将所有输入点和裁剪点拼接成一个大张量
     input_data = torch.cat(INPUT,dim=0)# B N 3
     crop_data = torch.cat(CROP,dim=0)# B M 3
 
+    # 返回连续的张量
     return input_data.contiguous(), crop_data.contiguous()
 
 def get_ptcloud_img(ptcloud):
+    # 创建一个尺寸为8x8的图形
     fig = plt.figure(figsize=(8, 8))
 
+    # 将点云数据转置，使得x, z, y分别为点云的三个坐标轴
     x, z, y = ptcloud.transpose(1, 0)
+    # 获取当前图形的Axes3D对象，用于3D绘图
     ax = fig.gca(projection=Axes3D.name, adjustable='box')
+    # 关闭坐标轴显示
     ax.axis('off')
     # ax.axis('scaled')
     ax.view_init(30, 45)
@@ -240,7 +268,6 @@ def get_ptcloud_img(ptcloud):
     img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (3, ))
     return img
-
 
 
 def visualize_KITTI(path, data_list, titles = ['input','pred'], cmap=['bwr','autumn'], zdir='y', 
@@ -272,6 +299,7 @@ def visualize_KITTI(path, data_list, titles = ['input','pred'], cmap=['bwr','aut
     plt.close(fig)
 
 
+# 对点云数据进行随机下采样
 def random_dropping(pc, e):
     up_num = max(64, 768 // (e//50 + 1))
     pc = pc
@@ -282,6 +310,7 @@ def random_dropping(pc, e):
     return pc
     
 
+# 随机缩放
 def random_scale(partial, scale_range=[0.8, 1.2]):
     scale = torch.rand(1).cuda() * (scale_range[1] - scale_range[0]) + scale_range[0]
     return partial * scale
