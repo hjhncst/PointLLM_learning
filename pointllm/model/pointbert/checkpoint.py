@@ -47,13 +47,16 @@ def _strip_prefix_if_present(state_dict: Dict[str, Any], prefix: str) -> None:
         state_dict (OrderedDict): a state-dict to be loaded to the model.
         prefix (str): prefix.
     """
+    # 获取state_dict中的所有键，并按字典序排序
     keys = sorted(state_dict.keys())
+    # 检查所有键是否都以prefix开头，如果不是则直接返回
     if not all(len(key) == 0 or key.startswith(prefix) for key in keys):
         return
 
+    # 遍历所有键，去除前缀并更新state_dict
     for key in keys:
-        newkey = key[len(prefix):]
-        state_dict[newkey] = state_dict.pop(key)
+        newkey = key[len(prefix):]  # 去除前缀
+        state_dict[newkey] = state_dict.pop(key)  # 更新state_dict
 
     # also strip the prefix in metadata, if any..
     try:

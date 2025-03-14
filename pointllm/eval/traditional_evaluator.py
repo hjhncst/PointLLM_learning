@@ -20,21 +20,25 @@ from tqdm import tqdm
 
 class TraditionalMetricEvaluator():
     def __init__(self, inputs, output_dir, output_file):
-        self.results = inputs['results']
-        self.inference_prompt = inputs['prompt']
-        self.output_dir = output_dir
-        self.output_file = output_file
-        self.rouge = Rouge()
-        self.response_data = []
 
-        self.ground_truths = []
-        self.generated_captions = []
+        # 初始化评估器，接收输入数据、输出目录和输出文件名
+        self.results = inputs['results']  # 评估结果数据
+        self.inference_prompt = inputs['prompt']  # 推理提示
+        self.output_dir = output_dir  # 输出目录
+        self.output_file = output_file  # 输出文件名
+        self.rouge = Rouge()  # 初始化ROUGE评估工具
+        self.response_data = []  # 存储每个结果的详细信息
 
-        self.sbert_model = SentenceTransformer('all-mpnet-base-v2')
+        self.ground_truths = []  # 存储真实标签
+        self.generated_captions = []  # 存储生成的标题
 
+        self.sbert_model = SentenceTransformer('all-mpnet-base-v2')  # 初始化SBERT模型
+
+        # 初始化SimCSE模型和tokenizer
         self.simcse_tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/sup-simcse-roberta-large")
         self.simcse_model = AutoModel.from_pretrained("princeton-nlp/sup-simcse-roberta-large")
 
+        # 初始化评分字典，存储不同指标的评分列表
         self.scores = {
             'bleu-1': [],
             'bleu-2': [],
@@ -49,9 +53,11 @@ class TraditionalMetricEvaluator():
         }
 
     def evaluate_result(self, result):
-        object_id = result['object_id']
-        ground_truth = result['ground_truth']
-        model_output = result['model_output']
+
+        # 评估单个结果
+        object_id = result['object_id']  # 获取对象ID
+        ground_truth = result['ground_truth']  # 获取真实标签
+        model_output = result['model_output']  # 获取模型输出
 
         if model_output == "":
             # * all score should be 0
@@ -107,9 +113,12 @@ class TraditionalMetricEvaluator():
         return object_id, model_output, ground_truth, scores
 
     def evaluate(self):
+        # 打印开始评估的提示信息
         print("Starting evaluation...")
 
+        # 使用tqdm库显示评估进度条，遍历self.results中的每个结果
         for result in tqdm(self.results, desc="Evaluating"):  
+            # 调用evaluate_result方法，获取评估结果中的object_id, model_output, ground_truth, scores
             object_id, model_output, ground_truth, scores = self.evaluate_result(result)
 
             # save the object_id, model_output, ground_truth, and scores for each result
@@ -129,27 +138,36 @@ class TraditionalMetricEvaluator():
         self.print_results()
 
     def save_results(self):
+        # 构建输出文件的完整路径，路径由输出目录和输出文件名组成
         output_path = os.path.join(self.output_dir, self.output_file)
 
+        # 以写模式打开输出文件
         with open(output_path, 'w') as f:
+            # 准备要保存的结果数据
             results_to_save = {
+                # 保存推理提示
                 'inference_prompt': self.inference_prompt,
+                # 保存各项指标的平均分数，分数保留四位小数
                 'overall_scores': {metric: f"{np.mean(scores):.4f}" for metric, scores in self.scores.items()},
+                # 保存响应数据
                 'results': self.response_data,
             }
+            # 将结果数据以JSON格式写入文件，缩进为2个空格
             json.dump(results_to_save, f, indent=2)
         
+        # 打印保存结果的文件路径
         print(f"Results saved to {output_path}")
 
-    def print_results(self):
-        print('-' * 80)
-        print("Results:")
-        for metric, scores in self.scores.items():
-            print(f"Average {metric.upper()} Score: {np.mean(scores):.4f}")
+    def print_results(self):  # 定义一个名为print_results的方法，用于打印结果
+        print('-' * 80)  # 打印80个连字符，用于分隔输出内容
+        print("Results:")  # 打印"Results:"，表示接下来将显示结果
+        for metric, scores in self.scores.items():  # 遍历self.scores字典，其中metric是键，scores是值
+            print(f"Average {metric.upper()} Score: {np.mean(scores):.4f}")  # 打印每个指标的均值分数
 
 def start_evaluation(results, output_dir, output_file,
                         parallel=True, num_workers=20):
     """
+    开始评估函数，用于对结果进行评估并保存评估结果。
     Args:
         results: dict or file path to the json file containing the dict
         output_file: the path the final evaluation results to be saved.

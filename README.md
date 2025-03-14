@@ -190,5 +190,71 @@ LRU缓存类，定义一些列缓存操作。
 
 ## traditional_evaluator.py
 
+![alt text](../PointLLM/assets/image24.png)
+
+定义了一个名为 TraditionalMetricEvaluator 的类，用于评估自然语言处理模型生成的文本的质量。该类主要使用多种传统的评估指标，如 BLEU、ROUGE、METEOR，以及基于句向量的相似度评估方法（如 SBERT 和 SimCSE）。
+
+![alt text](../PointLLM/assets/image25.png)
+
+用于评估自然语言处理模型输出的函数。它计算了多种评估指标，包括BLEU、ROUGE、METEOR、SBERT相似度和SimCSE相似度。
+
 ## utils.py
+
+![alt text](../PointLLM/assets/image26.png)
+
+实现带有指数退避策略的重试机制。指数退避是一种错误处理策略，通常用于网络编程中，当遇到暂时性错误时，通过逐渐增加重试间隔来减少对服务器的压力。
+
+![alt text](../PointLLM/assets/image27.png)
+
+用于与 OpenAI 的 GPT-3.5-turbo 模型进行交互。
+
+# model文件夹
+
+## pointbert文件夹
+
+### checkpoint.py
+
+这段代码主要涉及深度学习模型参数的管理和检查点（checkpoint）的处理。下面是对每个函数的详细解释：
+
+1.get_missing_parameters_message(keys: List[str]) -> str:
+
+用途: 生成一个日志友好的消息，报告在模型中存在但在检查点中找不到的参数名称。
+实现原理: 使用 _group_checkpoint_keys 函数对参数名称进行分组，然后格式化成蓝色文本的消息。
+参数: keys 是一个字符串列表，表示在检查点中找不到的参数名称。
+返回值: 一个字符串消息。
+
+2.get_unexpected_parameters_message(keys: List[str]) -> str:
+
+用途: 生成一个日志友好的消息，报告在检查点中存在但在模型中找不到的参数名称。
+实现原理: 与 get_missing_parameters_message 类似，但生成的是紫色文本的消息。
+参数: keys 是一个字符串列表，表示在模型中找不到的参数名称。
+返回值: 一个字符串消息。
+
+3._strip_prefix_if_present(state_dict: Dict[str, Any], prefix: str) -> None:
+
+用途: 如果存在前缀，则从状态字典中去除该前缀。
+实现原理: 检查状态字典中的所有键是否以指定前缀开头，如果是，则去除前缀。
+参数: state_dict 是一个有序字典，表示要加载到模型中的状态字典；prefix 是要去除的前缀。
+返回值: 无返回值，直接修改 state_dict。
+
+4._group_checkpoint_keys(keys: List[str]) -> Dict[str, List[str]]:
+
+用途: 根据公共前缀对键进行分组。
+实现原理: 遍历键列表，根据最后一个 . 之前的部分作为前缀进行分组。
+参数: keys 是一个字符串列表，表示模型检查点字典中的参数名称。
+返回值: 一个字典，键是前缀，值是具有相同前缀的参数名称列表。
+
+5._group_to_str(group: List[str]) -> str:
+
+用途: 将参数名称后缀组格式化为可记录的字符串。
+实现原理: 根据后缀组的长度，生成不同的格式化字符串。
+参数: group 是一个字符串列表，表示参数名称的后缀。
+返回值: 一个格式化的字符串。
+
+6._named_modules_with_dup(model: nn.Module, prefix: str = "") -> Iterable[Tuple[str, nn.Module]]:
+
+用途: 与 model.named_modules() 类似，但包括具有多个名称的重复模块。
+实现原理: 递归地遍历模型的所有模块，并生成模块的名称和模块本身。
+参数: model 是一个 nn.Module 对象，表示要遍历的模型；prefix 是模块名称的前缀。
+返回值: 一个生成器，生成 (名称, 模块) 的元组。
 
